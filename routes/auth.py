@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlmodel import select
 from pydantic import BaseModel, EmailStr
 
@@ -50,6 +50,17 @@ def get_current_user(token_data: TokenData = Depends(lambda: None)) -> User:
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
         return user
+
+
+def get_optional_token_data(
+    token: Optional[str] = None,
+    authorization: Optional[str] = Header(default=None),
+) -> Optional[TokenData]:
+    if token:
+        return decode_token(token)
+    if authorization and authorization.startswith("Bearer "):
+        return decode_token(authorization.split(" ", 1)[1])
+    return None
 
 
 @router.post("/register", response_model=UserResponse)
@@ -161,7 +172,9 @@ def logout(request: RefreshRequest):
 
 
 @router.get("/me", response_model=UserResponse)
-def me(token_data: Optional[TokenData] = Depends(decode_token)):
+def me(
+    token_data: Optional[TokenData] = Depends(get_optional_token_data),
+):
     if not token_data:
         raise HTTPException(status_code=401, detail="Not authenticated")
     

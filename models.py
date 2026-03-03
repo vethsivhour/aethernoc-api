@@ -24,7 +24,7 @@ class RefreshToken(SQLModel, table=True):
     __tablename__ = "refresh_tokens"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id", on_delete="CASCADE")
+    user_id: int = Field(foreign_key="users.id", ondelete="CASCADE")
     token: str
     expires_at: datetime
     created_at: datetime = Field(default_factory=datetime.utcnow)
